@@ -1,9 +1,29 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import LoginForm from '../components/auth/LoginForm';
+import { toast } from 'sonner';
+import { auth } from '../lib/firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 export default function Login() {
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isTestingConnection, setIsTestingConnection] = useState(false);
+
+  const testConnection = async () => {
+    setIsTestingConnection(true);
+    try {
+      // Try to sign in with test credentials
+      await signInWithEmailAndPassword(auth, 'fan@reggaefootballfanz.com', 'fan123');
+      toast.success('Firebase connection successful!');
+      // Sign out immediately after successful test
+      await auth.signOut();
+    } catch (error) {
+      toast.error('Firebase connection failed. Please check your configuration.');
+      console.error('Connection test error:', error);
+    } finally {
+      setIsTestingConnection(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
@@ -13,6 +33,13 @@ export default function Login() {
           <p className="mt-2 text-gray-300">
             Log in to your Reggae Football Fanz account
           </p>
+          <button
+            onClick={testConnection}
+            disabled={isTestingConnection}
+            className="mt-4 text-sm text-jamaican-yellow hover:text-jamaican-green"
+          >
+            {isTestingConnection ? 'Testing...' : 'Test Firebase Connection'}
+          </button>
         </div>
 
         <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8">

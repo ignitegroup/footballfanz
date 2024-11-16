@@ -1,0 +1,10 @@
+<svg width="300" height="300" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="150" cy="120" r="100" fill="black"/>
+  <path d="M150 20C94.8 20 50 64.8 50 120s44.8 100 100 100 100-44.8 100-100S205.2 20 150 20zm0 180c-44.2 0-80-35.8-80-80s35.8-80 80-80 80 35.8 80 80-35.8 80-80 80z" fill="#FED100"/>
+  <path d="M150 40c-44.2 0-80 35.8-80 80s35.8 80 80 80 80-35.8 80-80-35.8-80-80-80zm0 140c-33.1 0-60-26.9-60-60s26.9-60 60-60 60 26.9 60 60-26.9 60-60 60z" fill="#009B3A"/>
+  <text x="150" y="125" text-anchor="middle" font-family="Arial Black" font-size="24" fill="#FED100">JAMAICA</text>
+  <text x="150" y="95" text-anchor="middle" font-family="Arial Black" font-size="24" fill="#009B3A">FOOTBALL</text>
+  <text x="150" y="155" text-anchor="middle" font-family="Arial Black" font-size="24" fill="#009B3A">FANZ</text>
+  <text x="150" y="220" text-anchor="middle" font-family="Arial Black" font-size="48" fill="#009B3A">REGGAE</text>
+  <text x="150" y="270" text-anchor="middle" font-family="Arial Black" font-size="36" fill="#FED100">FOOTBALL FANZ</text>
+</svg>

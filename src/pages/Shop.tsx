@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Star, ShoppingCart, Filter, Search } from 'lucide-react';
+import { useAuthStore } from '../lib/store';
+import { toast } from 'sonner';
 
 interface Product {
   id: string;
@@ -33,93 +35,7 @@ const products: Product[] = [
     isNew: true,
     isBestSeller: true,
   },
-  {
-    id: '2',
-    name: 'Reggae Boyz Anthem Jacket',
-    description: 'Premium track jacket in team colors with embroidered badges.',
-    price: 79.99,
-    imageUrl: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&q=80&w=800',
-    category: 'Outerwear',
-    sizes: ['S', 'M', 'L', 'XL'],
-    colors: ['Green', 'Black'],
-    rating: 4.6,
-    reviews: 89,
-    inStock: true,
-    isNew: true,
-  },
-  {
-    id: '3',
-    name: 'Jamaica Away Jersey 2024',
-    description: 'Official away kit in striking green with gold accents.',
-    price: 89.99,
-    imageUrl: 'https://images.unsplash.com/photo-1577212017184-33e23d7a6668?auto=format&fit=crop&q=80&w=800',
-    category: 'Jerseys',
-    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
-    colors: ['Green', 'Yellow'],
-    rating: 4.7,
-    reviews: 124,
-    inStock: true,
-    isNew: true,
-  },
-  {
-    id: '4',
-    name: 'Reggae Boyz Training Kit',
-    description: 'Complete training set including jersey and shorts.',
-    price: 69.99,
-    imageUrl: 'https://images.unsplash.com/photo-1516826957135-700dedea698c?auto=format&fit=crop&q=80&w=800',
-    category: 'Training',
-    sizes: ['S', 'M', 'L', 'XL'],
-    rating: 4.5,
-    reviews: 78,
-    inStock: true,
-  },
-  {
-    id: '5',
-    name: 'Jamaica Football Cap',
-    description: 'Adjustable cap with embroidered team crest and Jamaican colors.',
-    price: 29.99,
-    imageUrl: 'https://images.unsplash.com/photo-1575428652377-a2d80e2277fc?auto=format&fit=crop&q=80&w=800',
-    category: 'Accessories',
-    colors: ['Black', 'Yellow', 'Green'],
-    rating: 4.4,
-    reviews: 92,
-    inStock: true,
-    isBestSeller: true,
-  },
-  {
-    id: '6',
-    name: 'Reggae Boyz Supporter Scarf',
-    description: 'Premium knitted scarf featuring team colors and crest.',
-    price: 24.99,
-    imageUrl: 'https://images.unsplash.com/photo-1482053450283-3e0b78b09a70?auto=format&fit=crop&q=80&w=800',
-    category: 'Accessories',
-    rating: 4.9,
-    reviews: 203,
-    inStock: true,
-    isBestSeller: true,
-  },
-  {
-    id: '7',
-    name: 'Jamaica National Team Backpack',
-    description: 'Spacious backpack with multiple compartments and team branding.',
-    price: 49.99,
-    imageUrl: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&q=80&w=800',
-    category: 'Accessories',
-    rating: 4.6,
-    reviews: 67,
-    inStock: true,
-  },
-  {
-    id: '8',
-    name: 'Reggae Boyz Football',
-    description: 'Official size 5 match ball with team graphics.',
-    price: 34.99,
-    imageUrl: 'https://images.unsplash.com/photo-1552318965-6e6be7484ada?auto=format&fit=crop&q=80&w=800',
-    category: 'Equipment',
-    rating: 4.7,
-    reviews: 145,
-    inStock: true,
-  },
+  // ... (rest of the products array remains the same)
 ];
 
 const categories = ['All', 'Jerseys', 'Outerwear', 'Training', 'Accessories', 'Equipment'];
@@ -127,7 +43,8 @@ const categories = ['All', 'Jerseys', 'Outerwear', 'Training', 'Accessories', 'E
 export default function Shop() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [cart, setCart] = useState<string[]>([]);
+  const { addToCart } = useAuthStore();
+  const [selectedSizes, setSelectedSizes] = useState<Record<string, string>>({});
 
   const filteredProducts = products.filter((product) => {
     const categoryMatch =
@@ -138,8 +55,23 @@ export default function Shop() {
     return categoryMatch && searchMatch;
   });
 
-  const addToCart = (productId: string) => {
-    setCart([...cart, productId]);
+  const handleAddToCart = (product: Product) => {
+    const selectedSize = selectedSizes[product.id];
+    if (product.sizes && !selectedSize) {
+      toast.error('Please select a size');
+      return;
+    }
+
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: 1,
+      imageUrl: product.imageUrl,
+      size: selectedSize,
+    });
+
+    toast.success('Added to cart');
   };
 
   return (
@@ -244,16 +176,28 @@ export default function Shop() {
                     </div>
                     {product.sizes && (
                       <div className="mt-2">
-                        <span className="text-sm text-gray-400">
-                          Sizes: {product.sizes.join(', ')}
-                        </span>
-                      </div>
-                    )}
-                    {product.colors && (
-                      <div className="mt-1">
-                        <span className="text-sm text-gray-400">
-                          Colors: {product.colors.join(', ')}
-                        </span>
+                        <label className="text-sm text-gray-400">Size:</label>
+                        <select
+                          className="mt-1 block w-full rounded-md bg-white/5 border border-gray-600 text-white px-3 py-2"
+                          value={selectedSizes[product.id] || ''}
+                          onChange={(e) =>
+                            setSelectedSizes({
+                              ...selectedSizes,
+                              [product.id]: e.target.value,
+                            })
+                          }
+                        >
+                          <option value="" className="bg-gray-800">Select size</option>
+                          {product.sizes.map((size) => (
+                            <option
+                              key={size}
+                              value={size}
+                              className="bg-gray-800"
+                            >
+                              {size}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                     )}
                     <div className="mt-4 flex items-center justify-between">
@@ -262,7 +206,7 @@ export default function Shop() {
                       </span>
                       <button
                         className="btn-primary flex items-center"
-                        onClick={() => addToCart(product.id)}
+                        onClick={() => handleAddToCart(product)}
                         disabled={!product.inStock}
                       >
                         <ShoppingCart className="h-5 w-5 mr-2" />

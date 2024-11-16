@@ -7,6 +7,9 @@ import { auth } from '../../lib/firebase';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../lib/store';
+import ConnectionTest from '../ConnectionTest';
+import FirebaseSetup from '../FirebaseSetup';
+import { Loader2 } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -45,27 +48,13 @@ export default function LoginForm({ isAdmin = false }: LoginFormProps) {
   };
 
   const onSubmit = async (data: LoginFormData) => {
+    if (!navigator.onLine) {
+      toast.error('No internet connection available');
+      return;
+    }
+
     try {
       setIsLoading(true);
-
-      // For demo purposes, we'll simulate the login
-      if (isAdmin && data.email === ADMIN_EMAIL && data.password === ADMIN_PASSWORD) {
-        // Simulate admin login
-        setStoreAdmin(true);
-        setUser({ email: ADMIN_EMAIL, displayName: 'Admin User' } as any);
-        toast.success('Successfully logged in as admin');
-        navigate('/admin');
-        return;
-      } else if (!isAdmin && data.email === FAN_EMAIL && data.password === FAN_PASSWORD) {
-        // Simulate fan login
-        setStoreAdmin(false);
-        setUser({ email: FAN_EMAIL, displayName: 'Demo Fan' } as any);
-        toast.success('Successfully logged in');
-        navigate('/dashboard');
-        return;
-      }
-
-      // If not using demo credentials, try Firebase auth
       const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
       const isAdminUser = userCredential.user.email === ADMIN_EMAIL;
       setStoreAdmin(isAdminUser);
@@ -73,8 +62,16 @@ export default function LoginForm({ isAdmin = false }: LoginFormProps) {
       
       toast.success('Successfully logged in');
       navigate(isAdminUser ? '/admin' : '/dashboard');
-    } catch (error) {
-      toast.error('Invalid credentials');
+    } catch (error: any) {
+      console.error('Login error:', error);
+      
+      if (error.code === 'auth/network-request-failed') {
+        toast.error('Network error - please check your connection');
+      } else if (error.code === 'auth/invalid-credential') {
+        toast.error('Invalid email or password');
+      } else {
+        toast.error(error.message || 'Login failed');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -88,6 +85,7 @@ export default function LoginForm({ isAdmin = false }: LoginFormProps) {
         </label>
         <input
           type="email"
+          disabled={isLoading}
           {...register('email')}
           className="mt-1 block w-full rounded-md bg-white/5 border border-gray-600 text-white px-3 py-2"
         />
@@ -102,6 +100,7 @@ export default function LoginForm({ isAdmin = false }: LoginFormProps) {
         </label>
         <input
           type="password"
+          disabled={isLoading}
           {...register('password')}
           className="mt-1 block w-full rounded-md bg-white/5 border border-gray-600 text-white px-3 py-2"
         />
@@ -113,8 +112,9 @@ export default function LoginForm({ isAdmin = false }: LoginFormProps) {
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full btn-primary"
+        className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
       >
+        {isLoading && <Loader2 className="h-5 w-5 animate-spin" />}
         {isLoading ? 'Logging in...' : isAdmin ? 'Admin Login' : 'Log In'}
       </button>
 
@@ -124,13 +124,20 @@ export default function LoginForm({ isAdmin = false }: LoginFormProps) {
           Email: {isAdmin ? ADMIN_EMAIL : FAN_EMAIL}<br />
           Password: {isAdmin ? ADMIN_PASSWORD : FAN_PASSWORD}
         </code>
-        <button
-          type="button"
-          onClick={fillDemoCredentials}
-          className="mt-2 text-jamaican-yellow hover:text-jamaican-green"
-        >
-          Fill demo credentials
-        </button>
+        <div className="mt-2 flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={fillDemoCredentials}
+            className="text-jamaican-yellow hover:text-jamaican-green"
+            disabled={isLoading}
+          >
+            Fill demo credentials
+          </button>
+          <div className="flex justify-between">
+            <ConnectionTest />
+            <FirebaseSetup />
+          </div>
+        </div>
       </div>
     </form>
   );
